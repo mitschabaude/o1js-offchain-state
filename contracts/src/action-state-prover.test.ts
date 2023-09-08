@@ -1,7 +1,7 @@
 /**
  * Run with npx tsc && node, not jest
  */
-import { Field, Reducer } from 'snarkyjs';
+import { Field, Reducer } from 'o1js';
 import {
   proveActionState,
   Action,
@@ -13,7 +13,7 @@ import { describe, it } from 'node:test';
 function randomActions(n: number) {
   let actions: Action[] = [];
   for (let i = 0; i < n; i++) {
-    actions[i] = [Field.random(), Field.random()];
+    actions[i] = [Field.random(), Field.random(), Field.random()];
   }
   return actions;
 }

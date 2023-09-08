@@ -6,18 +6,31 @@ import {
   SelfProof,
   Proof,
   AccountUpdate,
-  provable,
   Bool,
-} from 'snarkyjs';
+  provablePure,
+  ProvablePure,
+} from 'o1js';
 const { ZkProgram } = Experimental;
 
-export { proveActionState, Action, ActionStateProof, compileProver };
+export {
+  proveActionState,
+  MaybeAction,
+  Action,
+  ActionStateProof,
+  compileProver,
+  update,
+  updateOutOfSnark,
+};
 
 // TODO should be a parameter
-type Action = readonly [Field, Field];
-const Action: Provable<Action> = provable([Field, Field] as const);
+type Action = readonly [Field, Field, Field];
+const Action: ProvablePure<Action> = provablePure([
+  Field,
+  Field,
+  Field,
+] as const);
 
-const actionsPerBatch = 200; // TODO should be a parameter
+const actionsPerBatch = 20; // TODO should be a parameter
 
 /**
  * prove that a _dynamic_ number of actions result in `startState` -> `endState`
@@ -73,13 +86,19 @@ async function compileProver() {
   }
 }
 
-// everything below is internal
+function updateOutOfSnark(state: Field, action?: Action) {
+  if (action === undefined) return state;
+  let actionsHash = AccountUpdate.Actions.hash([Action.toFields(action)]);
+  return AccountUpdate.Actions.updateSequenceState(state, actionsHash);
+}
 
 function update(state: Field, action: Option<Action>) {
   let actionsHash = AccountUpdate.Actions.hash([Action.toFields(action.value)]);
   let newState = AccountUpdate.Actions.updateSequenceState(state, actionsHash);
   return Provable.if(action.isSome, newState, state);
 }
+
+// everything below is internal
 
 const MaybeAction = Option(Action);
 const ActionBatch = Provable.Array(MaybeAction, actionsPerBatch);

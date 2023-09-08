@@ -49,7 +49,7 @@ let onchainTree = new CloneableMerkleTree(treeHeight);
 
 class MyMerkleWitness extends MerkleWitness(treeHeight) {}
 
-const batchSize = 20;
+const batchSize = 5;
 
 class OffchainState extends SmartContract {
   @state(Field) commitmentRoot = State<Field>();
@@ -148,6 +148,8 @@ class OffchainState extends SmartContract {
       actions,
       Field,
       (root, [keyCommitment, valueCommitment, _uid]) => {
+        let isDummy = keyCommitment.equals(0);
+
         let oldValueCommitment = Provable.witness(Field, () =>
           tmpTree.getLeaf(keyCommitment.toBigInt())
         );
@@ -167,11 +169,11 @@ class OffchainState extends SmartContract {
         // also update the tree! (not part of the circuit)
         Provable.asProver(() => {
           // ignore dummy value
-          if (keyCommitment.toBigInt() === 0n) return;
+          if (isDummy.toBoolean()) return;
           tmpTree.setLeaf(keyCommitment.toBigInt(), valueCommitment);
         });
 
-        return newRoot;
+        return Provable.if(isDummy, root, newRoot);
       },
       {
         state: this.commitmentRoot.getAndAssertEquals(),
@@ -206,7 +208,7 @@ class OffchainState extends SmartContract {
       return value;
     });
 
-    let valueCommitment = hashwithPrefix('value', Key.toFields(key));
+    let valueCommitment = hashwithPrefix('value', Value.toFields(value));
 
     // prove that (key, value) are in the merkle tree
     let witness = Provable.witness(MyMerkleWitness, () => {

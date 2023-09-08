@@ -1,5 +1,6 @@
 import { AccountUpdate, Mina, PrivateKey, Provable } from 'o1js';
 import { Key, OffchainState, Value } from './Offchain.js';
+import { compileProver } from './action-state-prover.js';
 
 const proofsEnabled = false;
 
@@ -15,7 +16,10 @@ let zkappAddress = zkappKey.toPublicKey();
 let offchain = new OffchainState(zkappAddress);
 
 // initialize contract
-if (proofsEnabled) await OffchainState.compile();
+if (proofsEnabled) {
+  await compileProver();
+  await OffchainState.compile();
+}
 
 let tx;
 
@@ -32,7 +36,7 @@ await tx.sign([senderKey, zkappKey]).send();
 let keys = [];
 
 // set some data
-for (let i = 0; i < 25; i++) {
+for (let i = 0; i < 7; i++) {
   console.log('set', i, '...');
   let key = Key.random();
   keys.push(key);
@@ -51,10 +55,10 @@ await tx.sign([senderKey]).send();
 
 // get data
 console.log('get');
-let key = keys[15];
+let key = keys[3];
 tx = await Mina.transaction(sender, () => {
   let value = offchain.get(key);
-  Provable.log(value);
+  // do something with value
 });
 await tx.prove();
 console.log(tx.toPretty());

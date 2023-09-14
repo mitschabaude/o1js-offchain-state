@@ -127,6 +127,7 @@ const ActionStateProver = ZkProgram({
         proofSoFar: Proof<Field, Field>,
         nextBatch: Option<Action>[]
       ): Field {
+        proofSoFar.verify();
         proofSoFar.publicInput.assertEquals(startState);
         let state = proofSoFar.publicOutput;
         for (let action of nextBatch) {

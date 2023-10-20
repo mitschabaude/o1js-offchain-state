@@ -1,8 +1,9 @@
-# snarkyjs-offchain-state
+# o1js-offchain-state
 
 here I want to experiment with the viability of different large state architectures in [zkApps on Mina](https://docs.minaprotocol.com/zkapps).
 
 there are three possible paradigms:
+
 - offchain state commited to in onchain state
 - using actions as a sort of builtin offchain state
 - using the manager contract feature ("tokens") to manage state in 1 account per user

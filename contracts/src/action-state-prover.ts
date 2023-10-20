@@ -52,6 +52,9 @@ async function proveActionState(
   let n = actions.length;
   let nBatches = Math.ceil(n / actionsPerBatch);
 
+  // if there are no actions, we still need to create a proof
+  if (n === 0) nBatches = 1;
+
   for (let i = 0, k = 0; i < nBatches; i++) {
     let batch: Option<Action>[] = [];
     for (let j = 0; j < actionsPerBatch; j++, k++) {
@@ -60,18 +63,13 @@ async function proveActionState(
     batches[i] = batch;
   }
 
-  if (nBatches === 0) {
-    console.log('creating dummy proof...');
-    console.time('dummy proof');
-    let proof = await ActionStateProver.noBatch(startState);
-    console.timeEnd('dummy proof');
-
-    return { endState: startState, proof };
-  }
-
   console.log('creating base proof...');
   console.time('base proof');
-  let proof = await ActionStateProver.firstBatch(startState, batches[0]);
+  let proof = await ActionStateProver.firstBatch(
+    startState,
+    batches[0],
+    Bool(n === 0)
+  );
   console.timeEnd('base proof');
 
   for (let i = 1; i < nBatches; i++) {
@@ -120,13 +118,14 @@ const ActionStateProver = ZkProgram({
 
   methods: {
     firstBatch: {
-      privateInputs: [ActionBatch],
+      privateInputs: [ActionBatch, Bool],
 
-      method(state: Field, batch: Option<Action>[]): Field {
+      method(startState: Field, batch: Option<Action>[], isEmpty: Bool): Field {
+        let state = startState;
         for (let action of batch) {
           state = update(state, action);
         }
-        return state;
+        return Provable.if(isEmpty, startState, state);
       },
     },
 
@@ -144,14 +143,6 @@ const ActionStateProver = ZkProgram({
         for (let action of nextBatch) {
           state = update(state, action);
         }
-        return state;
-      },
-    },
-
-    noBatch: {
-      privateInputs: [],
-
-      method(state: Field): Field {
         return state;
       },
     },

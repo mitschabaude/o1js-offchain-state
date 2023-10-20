@@ -25,7 +25,20 @@ console.timeEnd('compile');
 await describe('test action state prover', async () => {
   let state = Reducer.initialActionState;
 
-  it('does 500 actions', async () => {
+  await it('does 0 actions', async () => {
+    let startState = state;
+
+    console.time('prove');
+    let { endState, proof } = await proveActionState(startState, []);
+    console.timeEnd('prove');
+
+    expect(endState).toEqual(startState);
+    expect(proof.publicInput).toEqual(startState);
+    expect(proof.publicOutput).toEqual(endState);
+    state = endState;
+  });
+
+  await it('does 500 actions', async () => {
     let startState = state;
 
     console.time('prove');

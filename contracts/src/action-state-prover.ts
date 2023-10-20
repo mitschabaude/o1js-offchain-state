@@ -30,12 +30,15 @@ const Action: ProvablePure<Action> = provablePure([
   Field,
 ] as const);
 
-const actionsPerBatch = 20; // TODO should be a parameter
+const actionsPerBatch = 300; // TODO should be a parameter
 
 /**
  * prove that a _dynamic_ number of actions result in `startState` -> `endState`
  *
  * wraps a zk program which recursively adds one batch at a time
+ *
+ * **important**: the actions are only used to build witness hashes. so, this only proves that _there exists_ a sequence
+ * of actions such that we get `endState` from `startState`. it does not prove that exactly these actions were used.
  */
 async function proveActionState(
   startState: Field,
@@ -59,17 +62,23 @@ async function proveActionState(
 
   if (nBatches === 0) {
     console.log('creating dummy proof...');
+    console.time('dummy proof');
     let proof = await ActionStateProver.noBatch(startState);
+    console.timeEnd('dummy proof');
 
     return { endState: startState, proof };
   }
 
   console.log('creating base proof...');
+  console.time('base proof');
   let proof = await ActionStateProver.firstBatch(startState, batches[0]);
+  console.timeEnd('base proof');
 
   for (let i = 1; i < nBatches; i++) {
     console.log(`creating proof ${i}...`);
+    console.time(`proof ${i}`);
     proof = await ActionStateProver.nextBatch(startState, proof, batches[i]);
+    console.timeEnd(`proof ${i}`);
   }
 
   let endState = proof.publicOutput;
@@ -93,7 +102,9 @@ function updateOutOfSnark(state: Field, action?: Action) {
 }
 
 function update(state: Field, action: Option<Action>) {
-  let actionsHash = AccountUpdate.Actions.hash([Action.toFields(action.value)]);
+  let actionsHash = Provable.witness(Field, () =>
+    AccountUpdate.Actions.hash([Action.toFields(action.value)])
+  );
   let newState = AccountUpdate.Actions.updateSequenceState(state, actionsHash);
   return Provable.if(action.isSome, newState, state);
 }

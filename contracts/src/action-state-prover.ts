@@ -63,10 +63,16 @@ async function proveActionState(
     batches[i] = batch;
   }
 
+  console.time('dummy');
+  let dummy = await ActionStateProof.dummy(Field(0), Field(0), 1, 14);
+  console.timeEnd('dummy');
+
   console.log('creating base proof...');
   console.time('base proof');
-  let proof = await ActionStateProver.firstBatch(
+  let proof = await ActionStateProver.nextBatch(
     startState,
+    dummy,
+    Bool(false),
     batches[0],
     Bool(n === 0)
   );
@@ -75,7 +81,13 @@ async function proveActionState(
   for (let i = 1; i < nBatches; i++) {
     console.log(`creating proof ${i}...`);
     console.time(`proof ${i}`);
-    proof = await ActionStateProver.nextBatch(startState, proof, batches[i]);
+    proof = await ActionStateProver.nextBatch(
+      startState,
+      proof,
+      Bool(true),
+      batches[i],
+      Bool(false)
+    );
     console.timeEnd(`proof ${i}`);
   }
 
@@ -117,33 +129,32 @@ const ActionStateProver = ZkProgram({
   publicOutput: Field, // end action state
 
   methods: {
-    firstBatch: {
-      privateInputs: [ActionBatch, Bool],
-
-      method(startState: Field, batch: Option<Action>[], isEmpty: Bool): Field {
-        let state = startState;
-        for (let action of batch) {
-          state = update(state, action);
-        }
-        return Provable.if(isEmpty, startState, state);
-      },
-    },
-
     nextBatch: {
-      privateInputs: [SelfProof, ActionBatch],
+      privateInputs: [SelfProof, Bool, ActionBatch, Bool],
 
       method(
         startState: Field,
         proofSoFar: Proof<Field, Field>,
-        nextBatch: Option<Action>[]
+        isRecursive: Bool,
+        nextBatch: Option<Action>[],
+        isEmpty: Bool
       ): Field {
-        proofSoFar.verify();
-        proofSoFar.publicInput.assertEquals(startState);
-        let state = proofSoFar.publicOutput;
+        proofSoFar.verifyIf(isRecursive);
+        let proofStart = Provable.if(
+          isRecursive,
+          startState,
+          proofSoFar.publicInput
+        );
+        proofSoFar.publicInput.assertEquals(proofStart);
+        let state = Provable.if(
+          isRecursive,
+          proofSoFar.publicOutput,
+          startState
+        );
         for (let action of nextBatch) {
           state = update(state, action);
         }
-        return state;
+        return Provable.if(isEmpty, startState, state);
       },
     },
   },

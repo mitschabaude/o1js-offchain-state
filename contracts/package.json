@@ -39,6 +39,6 @@
     "typescript": "^4.7.2"
   },
   "dependencies": {
-    "o1js": "^0.12.2"
+    "o1js": "file:../../../mina/src/lib/snarkyjs"
   }
 }

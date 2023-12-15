@@ -1,5 +1,4 @@
 import {
-  Account,
   AccountUpdate,
   Mina,
   PrivateKey,
@@ -7,13 +6,16 @@ import {
   SmartContract,
 } from "o1js";
 import { readZkConfig } from "./zk-config.js";
+import assert from "node:assert/strict";
 
 export {
   setDebug,
+  setInfo,
   faucet,
   deploy,
   transaction,
-  fundAccountCreation as fundAccount,
+  transactionRejects,
+  fundAccountCreation,
   Local,
   zkappAddress,
   sender,
@@ -23,6 +25,10 @@ export {
 let DEBUG = false;
 function setDebug(debug: boolean) {
   DEBUG = debug;
+}
+let INFO = false;
+function setInfo(info: boolean) {
+  INFO = info;
 }
 
 let Local = Mina.LocalBlockchain();
@@ -50,6 +56,7 @@ async function deploy(
   if (DEBUG) console.log(tx.toPretty());
   await tx.prove();
   await tx.sign([senderKey, key]).send();
+  if (INFO) console.log(`deployed ${Contract.name}`);
 }
 
 async function transaction(
@@ -61,7 +68,33 @@ async function transaction(
   if (DEBUG) console.log(label, tx.toPretty());
   await tx.prove();
   await tx.sign([senderKey, ...otherSignatures]).send();
+  if (INFO) console.log("SUCCESS:", label);
   return tx;
+}
+
+async function transactionRejects(
+  label: string,
+  callback: () => void,
+  withError?: string | ((message: string) => void)
+) {
+  return assert.rejects(
+    () => transaction(label, callback),
+    (err: any) => {
+      if (typeof withError === "string") {
+        assert.match(err.message, new RegExp(withError), label);
+      } else if (typeof withError === "function") {
+        withError(err.message);
+      } else {
+        console.log(
+          label + "\n",
+          "transaction correctly rejected with message:",
+          err.message
+        );
+      }
+      if (INFO) console.log("FAILED as expected:", label);
+      return true;
+    }
+  );
 }
 
 function fundAccountCreation(number = 1) {

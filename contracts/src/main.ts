@@ -16,10 +16,13 @@ let zkappAddress = zkappKey.toPublicKey();
 let offchain = new OffchainState(zkappAddress);
 
 // initialize contract
+console.log('compiling...');
+console.time('compile');
 if (proofsEnabled) {
   await compileProver();
   await OffchainState.compile();
 }
+console.timeEnd('compile');
 
 let tx;
 

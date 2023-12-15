@@ -23,12 +23,14 @@ import { CloneableMerkleTree } from './cloneable-merkle-tree.js';
 
 export { OffchainState, Key, Value };
 
-class Key extends Struct([Field, Field]) {
+type tup = [] | [any, ...any];
+
+class Key extends Struct([Field, Field] satisfies tup) {
   static random() {
     return new Key([Field.random(), Field.random()]);
   }
 }
-class Value extends Struct([Field, Field, Field, Field]) {
+class Value extends Struct([Field, Field, Field, Field] satisfies tup) {
   static random() {
     return new Value([
       Field.random(),

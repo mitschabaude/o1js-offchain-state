@@ -1,6 +1,6 @@
 import {
   Field,
-  Experimental,
+  ZkProgram,
   Provable,
   Struct,
   SelfProof,
@@ -10,7 +10,6 @@ import {
   provablePure,
   ProvablePure,
 } from 'o1js';
-const { ZkProgram } = Experimental;
 
 export {
   proveActionState,
@@ -125,6 +124,7 @@ const MaybeAction = Option(Action);
 const ActionBatch = Provable.Array(MaybeAction, actionsPerBatch);
 
 const ActionStateProver = ZkProgram({
+  name: 'action-state-prover',
   publicInput: Field, // start action state
   publicOutput: Field, // end action state
 

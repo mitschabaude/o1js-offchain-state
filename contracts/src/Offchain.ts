@@ -12,14 +12,14 @@ import {
   Encoding,
   Provable,
   Mina,
-} from 'o1js';
+} from "o1js";
 import {
   Action,
   ActionStateProof,
   proveActionState,
   updateOutOfSnark,
-} from './action-state-prover.js';
-import { CloneableMerkleTree } from './cloneable-merkle-tree.js';
+} from "./action-state-prover.js";
+import { CloneableMerkleTree } from "./cloneable-merkle-tree.js";
 
 export { OffchainState, Key, Value };
 
@@ -85,11 +85,11 @@ class OffchainState extends SmartContract {
   }
 
   @method setProvable(key: Key, value: Value, uid: Field) {
-    this.emitEvent('set', { key, value, uid });
+    this.emitEvent("set", { key, value, uid });
 
     // hash key and value, dispatch to reducer
-    let keyCommitment = hashwithPrefix('key', Key.toFields(key));
-    let valueCommitment = hashwithPrefix('value', Value.toFields(value));
+    let keyCommitment = hashwithPrefix("key", Key.toFields(key));
+    let valueCommitment = hashwithPrefix("value", Value.toFields(value));
     this.reducer.dispatch([keyCommitment, valueCommitment, uid]);
   }
 
@@ -125,7 +125,7 @@ class OffchainState extends SmartContract {
       if (action === undefined) break;
       let [keyCommitment, valueCommitment, uid] = action;
       let event = offchainMap.get(uid.toBigInt());
-      if (event === undefined) throw Error('event not found');
+      if (event === undefined) throw Error("event not found");
       onchainMap.set(keyCommitment.toBigInt(), event.value);
       onchainTree.setLeaf(keyCommitment.toBigInt(), valueCommitment);
     }
@@ -141,7 +141,7 @@ class OffchainState extends SmartContract {
     let actions = this.reducer.getActions({ fromActionState, endActionState });
 
     // assert that we have `batchSize` actions or less
-    if (actions.length > batchSize) throw Error('unexpected # of actions');
+    if (actions.length > batchSize) throw Error("unexpected # of actions");
 
     let tmpTree = onchainTree.clone();
 
@@ -202,15 +202,15 @@ class OffchainState extends SmartContract {
 
   // can be called by anyone to provably retrieve data from any id
   @method get(key: Key): Value {
-    let keyCommitment = hashwithPrefix('key', Key.toFields(key));
+    let keyCommitment = hashwithPrefix("key", Key.toFields(key));
 
     let value = Provable.witness(Value, () => {
       let value = onchainMap.get(keyCommitment.toBigInt());
-      if (value === undefined) throw Error('key not found');
+      if (value === undefined) throw Error("key not found");
       return value;
     });
 
-    let valueCommitment = hashwithPrefix('value', Value.toFields(value));
+    let valueCommitment = hashwithPrefix("value", Value.toFields(value));
 
     // prove that (key, value) are in the merkle tree
     let witness = Provable.witness(MyMerkleWitness, () => {

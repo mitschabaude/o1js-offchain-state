@@ -1,7 +1,7 @@
 // cloneable merkle tree
 // fixes MerkleTree to support clone()
 // TODO implement for o1's MerkleTree
-import { Field, MerkleTree } from 'o1js';
+import { Field, MerkleTree } from "o1js";
 
 export { CloneableMerkleTree };
 

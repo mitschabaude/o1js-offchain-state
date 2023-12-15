@@ -1,14 +1,14 @@
 /**
  * Run with npx tsc && node, not jest
  */
-import { Field, Reducer } from 'o1js';
+import { Field, Reducer } from "o1js";
 import {
   proveActionState,
   Action,
   compileProver,
-} from './action-state-prover.js';
-import { expect } from 'expect';
-import { describe, it } from 'node:test';
+} from "./action-state-prover.js";
+import { expect } from "expect";
+import { describe, it } from "node:test";
 
 function randomActions(n: number) {
   let actions: Action[] = [];
@@ -18,19 +18,19 @@ function randomActions(n: number) {
   return actions;
 }
 
-console.time('compile');
+console.time("compile");
 await compileProver();
-console.timeEnd('compile');
+console.timeEnd("compile");
 
-await describe('test action state prover', async () => {
+await describe("test action state prover", async () => {
   let state = Reducer.initialActionState;
 
-  await it('does 0 actions', async () => {
+  await it("does 0 actions", async () => {
     let startState = state;
 
-    console.time('prove');
+    console.time("prove");
     let { endState, proof } = await proveActionState(startState, []);
-    console.timeEnd('prove');
+    console.timeEnd("prove");
 
     expect(endState).toEqual(startState);
     expect(proof.publicInput).toEqual(startState);
@@ -38,15 +38,15 @@ await describe('test action state prover', async () => {
     state = endState;
   });
 
-  await it('does 500 actions', async () => {
+  await it("does 500 actions", async () => {
     let startState = state;
 
-    console.time('prove');
+    console.time("prove");
     let { endState, proof } = await proveActionState(
       startState,
       randomActions(500)
     );
-    console.timeEnd('prove');
+    console.timeEnd("prove");
 
     expect(endState).not.toEqual(startState);
     expect(proof.publicInput).toEqual(startState);

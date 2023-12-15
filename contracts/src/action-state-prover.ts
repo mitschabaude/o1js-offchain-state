@@ -9,7 +9,7 @@ import {
   Bool,
   provablePure,
   ProvablePure,
-} from 'o1js';
+} from "o1js";
 
 export {
   proveActionState,
@@ -62,12 +62,12 @@ async function proveActionState(
     batches[i] = batch;
   }
 
-  console.time('dummy');
+  console.time("dummy");
   let dummy = await ActionStateProof.dummy(Field(0), Field(0), 1, 14);
-  console.timeEnd('dummy');
+  console.timeEnd("dummy");
 
-  console.log('creating base proof...');
-  console.time('base proof');
+  console.log("creating base proof...");
+  console.time("base proof");
   let proof = await ActionStateProver.nextBatch(
     startState,
     dummy,
@@ -75,7 +75,7 @@ async function proveActionState(
     batches[0],
     Bool(n === 0)
   );
-  console.timeEnd('base proof');
+  console.timeEnd("base proof");
 
   for (let i = 1; i < nBatches; i++) {
     console.log(`creating proof ${i}...`);
@@ -98,7 +98,7 @@ let isCompiled = false;
 
 async function compileProver() {
   if (!isCompiled) {
-    console.log('compile...');
+    console.log("compile...");
     await ActionStateProver.compile();
     isCompiled = true;
   }
@@ -124,7 +124,7 @@ const MaybeAction = Option(Action);
 const ActionBatch = Provable.Array(MaybeAction, actionsPerBatch);
 
 const ActionStateProver = ZkProgram({
-  name: 'action-state-prover',
+  name: "action-state-prover",
   publicInput: Field, // start action state
   publicOutput: Field, // end action state
 
